@@ -42,7 +42,7 @@ class ActivityLogController extends Controller
      */
     public function getData(Request $request)
     {
-
+        $canUpdate = auth('web')->user()->hasPermission('invoices_update');
         return DataTables::eloquent($this->filter($request))
             ->addIndexColumn()
             ->addColumn('select', function ($row) {
@@ -63,6 +63,31 @@ class ActivityLogController extends Controller
             ->addColumn('role', function ($row) {
                 return $row->causer->type;
             })
+            ->addColumn('action', function ($row) use ($canUpdate) {
+                $actionButtons = '';
+                if ($canUpdate && $row->log_name != "delete") {
+                    $exists_invoice = Invoice::whereId($row->subject_id)->exists();
+                    if($exists_invoice){
+                    $actionButtons = '
+                    <li class="list-inline-item edit" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="' . __('Show') . '">
+                        <a href="' . route('invoices.show', $row->subject_id) . '" class="text-primary d-inline-block edit-item-btn">
+                            <i class="ri-eye-fill fs-16"></i>
+                        </a>
+                    </li>
+
+                ';
+                        }else{
+                        $actionButtons = '<h6>Invoice Deleted</h6>';
+                    }
+                }else{
+                    $actionButtons = '<h6>Invoice Deleted</h6>';
+                }
+                return '
+                    <ul class="list-inline hstack gap-2 mb-0">
+                        ' . $actionButtons . '
+                    </ul>
+                ';
+            })
             ->rawColumns(['select', 'action'])
             ->make();
     }
@@ -80,7 +105,8 @@ class ActivityLogController extends Controller
                 $query->whereHas('causer', function ($w) use ($searchKey) {
                     $w->where('name', 'like', "%$searchKey%")->orWhere('type', 'like', "%$searchKey%");
                 })
-                    ->orWhere('description', 'like', "%$searchKey%");
+                    ->orWhere('description', 'like', "%$searchKey%")
+                    ->orWhere('log_name', 'like', "%$searchKey%");
             })
             ->when($request->has('from_date') && $request->filled('from_date'), function ($query) use ($request) {
                 $query->where('created_at', '>=', $request->from_date);
@@ -96,10 +122,12 @@ class ActivityLogController extends Controller
     {
         return [
             ['data' => 'DT_RowIndex', 'name' => 'DT_RowIndex', 'orderable' => false, 'searchable' => false],
-            ['data' => 'description', 'name' => 'description', 'label' => __('Action')],
+            ['data' => 'log_name', 'name' => 'log_name', 'label' => __('Action')],
+            ['data' => 'description', 'name' => 'description', 'label' => __('description')],
             ['data' => 'created_by', 'name' => 'created_by', 'label' => __('Created By')],
             ['data' => 'role', 'name' => 'role', 'label' => __('Role')],
             ['data' => 'created_at', 'name' => 'created_at', 'label' => __('Created At')],
+            ['data' => 'action', 'name' => 'action', 'label' => __('Invoice Details')],
 
         ];
     }

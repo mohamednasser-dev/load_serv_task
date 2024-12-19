@@ -79,7 +79,6 @@ Route::prefix('/admin')->middleware('auth')->group(function () {
 
     Route::resource('/invoices', InvoiceController::class)->names('invoices');
     Route::get('/invoices/get/data', [InvoiceController::class, 'getData'])->name('invoices.data');
-    Route::post('/invoices/bulkDelete', [InvoiceController::class, 'bulkDelete'])->name('invoices.bulkDelete');
     Route::post('/invoices/changeStatus', [InvoiceController::class, 'changeStatus'])->name('invoices.changeStatus');
 
     Route::resource('/activity_log', ActivityLogController::class)->names('activity_log');

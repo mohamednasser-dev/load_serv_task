@@ -76,13 +76,13 @@ class InvoiceController extends Controller
         }
 
         // Log Activity
-        activity('invoice-create')
+        activity('create')
             ->causedBy(auth()->user())
             ->performedOn($invoice)
             ->withProperties([
                 'invoice' => $invoice,
             ])
-            ->log('Create');
+            ->log('New Invoice Created '.$invoice->invoice_number);
         session()->flash('success', __('Operation Done Successfully'));
         DB::commit();
         return redirect()->back();
@@ -138,13 +138,13 @@ class InvoiceController extends Controller
         }
 
         // Log Activity
-        activity('invoice-update')
+        activity('update')
             ->causedBy(auth()->user())
             ->performedOn($invoice)
             ->withProperties([
-                'invoice' => $invoice,
+                'invoice' => $new_data,
             ])
-            ->log('Update');
+            ->log('Invoice '.$new_data->invoice_number.' Updated');
 
         session()->flash('success', __('Operation Done Successfully'));
         DB::commit();
@@ -157,41 +157,18 @@ class InvoiceController extends Controller
             $invoice = Invoice::findOrFail($id);
             $invoice->delete();
             // Log Activity
-            activity('invoice-delete')
+            activity('delete')
                 ->causedBy(auth()->user())
                 ->performedOn($invoice)
                 ->withProperties([
                     'invoice' => $invoice,
                 ])
-                ->log('Delete');
+                ->log('Invoice '.$invoice->invoice_number.' Deleted');
         } catch (\Exception $e) {
             session()->flash('error', __('Can Not Delete Item Because of it\'s dependency'));
             return redirect()->back();
         }
 
-        session()->flash('success', __('Operation Done Successfully'));
-        return redirect()->back();
-    }
-
-    public function bulkDelete(Request $request)
-    {
-        try {
-            $ids = explode(',', $request->ids);
-            $validator = Validator::make(['ids' => $ids], [
-                'ids' => 'required|array',
-                'ids.*' => 'required|integer|exists:invoices,id',
-            ]);
-            if (!is_array($validator) && $validator->fails()) {
-                return redirect()->back()->withErrors($validator);
-            }
-
-            $data = Invoice::whereIn('id', $ids)->get();
-            $data->delete();
-
-        } catch (\Exception $e) {
-            session()->flash('error', __('Can Not Delete Item Because of it\'s dependency'));
-            return redirect()->back();
-        }
         session()->flash('success', __('Operation Done Successfully'));
         return redirect()->back();
     }

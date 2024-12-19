@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\CustomerRequest;
 use App\Http\Requests\Api\InvoiceRequest;
+use App\Mail\SendInvoiceUpdatesMail;
+use App\Models\Invoice;
 use App\Models\InvoiceProduct;
 use App\Models\Product;
 use Carbon\Carbon;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 
@@ -59,13 +62,13 @@ class InvoiceController extends BaseController
 
         $result = new $this->resourceName($invoice);
         // Log Activity
-        activity('invoice-create')
+        activity('create')
             ->causedBy(auth()->user())
             ->performedOn($invoice)
             ->withProperties([
                 'invoice' => $invoice,
             ])
-            ->log('Create');
+            ->log('New Invoice Created '.$invoice->invoice_number);
         DB::commit();
         return msgdata(trans('Data Created Successfully'), $result, ResponseAlias::HTTP_OK);
     }
@@ -76,6 +79,7 @@ class InvoiceController extends BaseController
         $data = app($this->formRequest)->validated();
 
         $invoice = $this->modelName::whereId($id)->first();
+        $old_data = $invoice;
         if(!$invoice){
             return msg(trans('Invoice Not found'), ResponseAlias::HTTP_BAD_REQUEST);
         }
@@ -100,14 +104,22 @@ class InvoiceController extends BaseController
         $invoice = app($this->getModelName())::whereId($invoice->id)->first();
 
         $result = new $this->resourceName($invoice);
+
+        $new_data = Invoice::findOrFail($id);
+        try {
+            // Send the email
+            Mail::to($invoice->customer->email)->send(new SendInvoiceUpdatesMail($old_data, $new_data));
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+        }
         // Log Activity
-        activity('invoice-update')
+        activity('update')
             ->causedBy(auth()->user())
             ->performedOn($invoice)
             ->withProperties([
-                'invoice' => $invoice,
+                'invoice' => $new_data,
             ])
-            ->log('Update');
+            ->log('Invoice '.$new_data->invoice_number.' Updated');
         DB::commit();
         return msgdata(trans('Data Updated Successfully'), $result, ResponseAlias::HTTP_OK);
     }
@@ -115,16 +127,16 @@ class InvoiceController extends BaseController
     public function destroy($id)
     {
         try {
-            $record = $this->modelName::findOrFail($id);
-            $record->delete();
+            $invoice = $this->modelName::findOrFail($id);
+            $invoice->delete();
             // Log Activity
-            activity('invoice-delete')
+            activity('delete')
                 ->causedBy(auth()->user())
-                ->performedOn($record)
+                ->performedOn($invoice)
                 ->withProperties([
-                    'invoice' => $record,
+                    'invoice' => $invoice,
                 ])
-                ->log('Delete');
+                ->log('Invoice '.$invoice->invoice_number.' Deleted');
             return msg(trans('Data Deleted Successfully'), ResponseAlias::HTTP_OK);
         } catch (ModelNotFoundException $e) {
             Log::alert($e->getMessage());

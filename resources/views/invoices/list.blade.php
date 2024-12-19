@@ -19,6 +19,5 @@
     @slot('createRoute', route('invoices.create'))
     @endpermission
     @slot('deleteRoute', route('invoices.destroy', ':modelId'))
-    @slot('deleteMultiRoute', route('invoices.bulkDelete'))
     @slot('changeStatusRoute', route('invoices.changeStatus'))
 @endcomponent
