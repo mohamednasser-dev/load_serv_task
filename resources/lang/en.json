@@ -1,0 +1,26 @@
+{
+    "The :attribute must contain at least one letter.": "The :attribute must contain at least one letter.",
+    "The :attribute must contain at least one number.": "The :attribute must contain at least one number.",
+    "The :attribute must contain at least one symbol.": "The :attribute must contain at least one symbol.",
+    "The :attribute must contain at least one uppercase and one lowercase letter.": "The :attribute must contain at least one uppercase and one lowercase letter.",
+    "The given :attribute has appeared in a data leak. Please choose a different :attribute.": "The given :attribute has appeared in a data leak. Please choose a different :attribute.",
+    "Me": "Me",
+    "suspension_not_allowed_it_used_before_twice": "The suspension cannot be executed because it has already been used twice.",
+    "suspension_not_allowed_it_used_before_8": "The suspension cannot be executed because the maximum number of days for use is 8.",
+    "suspension_not_allowed_for_more_than_8_days": "The suspension cannot be executed because the maximum number of days for use is 8.",
+    "Pin Code is":"Pin Code is",
+
+    "Admins": "Admins",
+    "Admins List": "Admins List",
+    "Add Admin": "Add Admin",
+    "Edit Admin": "Edit Admin",
+
+    "employees": "Employees",
+    "employees List": "Employees List",
+    "Add employees": "Add Employee",
+    "Edit employees": "Edit Employee",
+
+    "Created successfully": "Created successfully",
+    "Status changed successfully": "Status changed successfully",
+    "Updated successfully": "Updated successfully"
+}
